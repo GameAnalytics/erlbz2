@@ -8,6 +8,8 @@
 /* See folly/FBVector.h for a motivation for this number */
 #define GROW_FACTOR 1.5
 
+/* Process a stream with the provided processor function, store results in
+ * buffer. The buffer will be reallocated if it runs out of space */
 static int
 process_stream(bz_stream* stream,
                 int (*bz_processor)(bz_stream*),
@@ -183,13 +185,19 @@ decompress_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
                         decompress_dirty, argc, argv);
 }
 
-
 static ErlNifFunc nif_funcs[] = {
     {"compress", 4, compress_nif},
     {"decompress", 2, decompress_nif}
 };
 
-ERL_NIF_INIT(erlbz2, nif_funcs, NULL, NULL, NULL, NULL);
+static int
+upgrade(ErlNifEnv* env, void** priv_data, void** old_priv_data, ERL_NIF_TERM load_info)
+{
+        /* Support reloading the NIF, we have no global state so that's ok */
+        return 0;
+}
+
+ERL_NIF_INIT(erlbz2, nif_funcs, NULL, NULL, upgrade, NULL);
 
 #else
 #error "Dirty scheduler not supported by your Erlang distribution!"
