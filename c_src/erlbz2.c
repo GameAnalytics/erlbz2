@@ -4,6 +4,9 @@
 #include <string.h>
 
 #ifdef ERL_NIF_DIRTY_SCHEDULER_SUPPORT
+#else
+#warning "Dirty scheduler not supported by your Erlang distribution!"
+#endif
 
 /* See folly/FBVector.h for a motivation for this number */
 #define GROW_FACTOR 1.5
@@ -61,7 +64,7 @@ bz_output_size(bz_stream* stream)
 }
 
 static ERL_NIF_TERM
-compress_dirty(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
+compress(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
         ErlNifBinary in, out;
         bz_stream bzs;
@@ -121,7 +124,7 @@ compress_dirty(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 }
 
 static ERL_NIF_TERM
-decompress_dirty(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
+decompress(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
         ErlNifBinary in, out;
         bz_stream bzs;
@@ -172,17 +175,25 @@ decompress_dirty(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 static ERL_NIF_TERM
 compress_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
+#ifdef ERL_NIF_DIRTY_SCHEDULER_SUPPORT
         return enif_schedule_nif(env, "compress_nif",
                         ERL_NIF_DIRTY_JOB_CPU_BOUND,
-                        compress_dirty, argc, argv);
+                        compress, argc, argv);
+#else
+        return compress(env, argc, argv);
+#endif
 }
 
 static ERL_NIF_TERM
 decompress_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
+#ifdef ERL_NIF_DIRTY_SCHEDULER_SUPPORT
         return enif_schedule_nif(env, "decompress_nif",
                         ERL_NIF_DIRTY_JOB_CPU_BOUND,
-                        decompress_dirty, argc, argv);
+                        decompress, argc, argv);
+#else
+        return decompress(env, argc, argv);
+#endif
 }
 
 static ErlNifFunc nif_funcs[] = {
@@ -198,7 +209,3 @@ upgrade(ErlNifEnv* env, void** priv_data, void** old_priv_data, ERL_NIF_TERM loa
 }
 
 ERL_NIF_INIT(erlbz2, nif_funcs, NULL, NULL, upgrade, NULL);
-
-#else
-#error "Dirty scheduler not supported by your Erlang distribution!"
-#endif
