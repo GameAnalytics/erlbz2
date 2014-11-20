@@ -5,7 +5,7 @@ erlbz2 is a linked-in driver which supports the low-level libbzip2 compression l
 
 ## Requirements
 
-* Erlang R12B1 or greater
+* Erlang R12B1 or greater (17.3 to actually use dirty NIF scheduling)
 * libbzip2 (tested with 1.0.5)
 
 ## Source
