@@ -21,6 +21,7 @@ process_stream(bz_stream* stream,
 {
         int result;
         size_t grow_size = 0;
+        char* new_buffer = NULL;
 
         stream->next_out = *buffer;
         stream->avail_out = buffer_size;
@@ -36,9 +37,16 @@ process_stream(bz_stream* stream,
                 if (stream->avail_out == 0)
                 {
                         grow_size = (size_t)(buffer_size * GROW_FACTOR);
-                        *buffer = reallocf(*buffer, buffer_size + grow_size);
-                        if (!*buffer)
+                        new_buffer = realloc(*buffer, buffer_size + grow_size);
+                        if (!new_buffer)
+                        {
+                                free(*buffer);
                                 return BZ_MEM_ERROR;
+                        }
+                        else
+                        {
+                                *buffer = new_buffer;
+                        }
                         stream->next_out = (*buffer) + buffer_size;
                         stream->avail_out = grow_size;
                         buffer_size += grow_size;
