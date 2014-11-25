@@ -12,7 +12,7 @@
 #define GROW_FACTOR 1.5
 
 /* Process a stream with the provided processor function, store results in
- * buffer. The buffer will be reallocated if it runs out of space */
+ * buffer. The buffer will be reallocated if it runs out of space. */
 static int
 process_stream(bz_stream* stream,
                 int (*bz_processor)(bz_stream*),
@@ -20,7 +20,7 @@ process_stream(bz_stream* stream,
                 size_t buffer_size)
 {
         int result;
-        size_t grow_size = 0;
+        size_t new_size = 0;
         char* new_buffer = NULL;
 
         stream->next_out = *buffer;
@@ -36,8 +36,8 @@ process_stream(bz_stream* stream,
 
                 if (stream->avail_out == 0)
                 {
-                        grow_size = (size_t)(buffer_size * GROW_FACTOR);
-                        new_buffer = realloc(*buffer, buffer_size + grow_size);
+                        new_size = (size_t)(buffer_size * GROW_FACTOR);
+                        new_buffer = realloc(*buffer, new_size);
                         if (!new_buffer)
                         {
                                 free(*buffer);
@@ -48,8 +48,8 @@ process_stream(bz_stream* stream,
                                 *buffer = new_buffer;
                         }
                         stream->next_out = (*buffer) + buffer_size;
-                        stream->avail_out = grow_size;
-                        buffer_size += grow_size;
+                        stream->avail_out = new_size - buffer_size;
+                        buffer_size = new_size;
                 }
         }
         return BZ_OK;
