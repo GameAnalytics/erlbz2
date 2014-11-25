@@ -12,7 +12,9 @@
 #define GROW_FACTOR 1.5
 
 /* Process a stream with the provided processor function, store results in
- * buffer. The buffer will be reallocated if it runs out of space. */
+ * buffer. The buffer will be reallocated if it runs out of space.
+ * The buffer is never freed, it is the callers responsibility to correctly
+ * free the buffer regardless of the return value */
 static int
 process_stream(bz_stream* stream,
                 int (*bz_processor)(bz_stream*),
@@ -40,7 +42,6 @@ process_stream(bz_stream* stream,
                         new_buffer = realloc(*buffer, new_size);
                         if (!new_buffer)
                         {
-                                free(*buffer);
                                 return BZ_MEM_ERROR;
                         }
                         else
@@ -113,12 +114,14 @@ compress(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 
         if (process_stream(&bzs, bz_compress, &buffer, buffer_size) != BZ_OK)
         {
+                free(buffer),
                 BZ2_bzCompressEnd(&bzs);
                 return enif_make_badarg(env);
         }
 
         if (!enif_alloc_binary(bz_output_size(&bzs), &out))
         {
+                free(buffer),
                 BZ2_bzCompressEnd(&bzs);
                 return enif_make_badarg(env);
         }
@@ -159,15 +162,16 @@ decompress(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
                 return BZ_MEM_ERROR;
         }
 
-        int result = process_stream(&bzs, BZ2_bzDecompress, &buffer, buffer_size);
-        if (result != BZ_OK)
+        if (process_stream(&bzs, BZ2_bzDecompress, &buffer, buffer_size) != BZ_OK)
         {
+                free(buffer);
                 BZ2_bzDecompressEnd(&bzs);
                 return enif_make_badarg(env);
         }
 
         if (!enif_alloc_binary(bz_output_size(&bzs), &out))
         {
+                free(buffer);
                 BZ2_bzDecompressEnd(&bzs);
                 return enif_make_badarg(env);
         }
