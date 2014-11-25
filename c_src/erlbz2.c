@@ -148,7 +148,7 @@ decompress(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
         if (!enif_inspect_binary(env, argv[0], &in))
                 return enif_make_badarg(env);
 
-        if (!enif_get_int(env, argv[3], &buffer_size))
+        if (!enif_get_int(env, argv[1], &buffer_size))
                 return enif_make_badarg(env);
         if (buffer_size <= 0)
                 return enif_make_badarg(env);
