@@ -112,7 +112,7 @@ compress(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
         if (!(buffer = calloc(buffer_size, 1)))
         {
                 BZ2_bzCompressEnd(&bzs);
-                return BZ_MEM_ERROR;
+                return enif_make_badarg(env);
         }
 
         if (process_stream(&bzs, bz_compress, &buffer, buffer_size) != BZ_OK)
@@ -162,7 +162,7 @@ decompress(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
         if (!(buffer = calloc(buffer_size, 1)))
         {
                 BZ2_bzCompressEnd(&bzs);
-                return BZ_MEM_ERROR;
+                return enif_make_badarg(env);
         }
 
         if (process_stream(&bzs, BZ2_bzDecompress, &buffer, buffer_size) != BZ_OK)
