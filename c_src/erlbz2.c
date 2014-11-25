@@ -11,6 +11,8 @@
 /* See folly/FBVector.h for a motivation for this number */
 #define GROW_FACTOR 1.5
 
+#define MAX(a,b) (((a)>(b))?(a):(b))
+
 /* Process a stream with the provided processor function, store results in
  * buffer. The buffer will be reallocated if it runs out of space.
  * The buffer is never freed, it is the callers responsibility to correctly
@@ -38,7 +40,8 @@ process_stream(bz_stream* stream,
 
                 if (stream->avail_out == 0)
                 {
-                        new_size = (size_t)(buffer_size * GROW_FACTOR);
+                        new_size = MAX((size_t)(buffer_size * GROW_FACTOR),
+                                        buffer_size + 1);
                         new_buffer = realloc(*buffer, new_size);
                         if (!new_buffer)
                         {
